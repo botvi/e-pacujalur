@@ -19,21 +19,18 @@ class RegisterController extends Controller
     public function register(Request $request)
     {
         $data = $request->validate([
-            'name' => 'required|string|max:255',
+            'nama' => 'required|string|max:255',
             'username' => 'required|string|max:50|unique:users,username',
             'email' => 'required|email|max:255|unique:users,email',
-            'no_wa' => 'required|string|max:20|unique:users,no_wa',
             'password' => 'required|min:6|confirmed',
             'agree-terms' => 'required',
         ], [
-            'name.required' => 'Nama lengkap wajib diisi',
+            'nama.required' => 'Nama lengkap wajib diisi',
             'username.required' => 'Username wajib diisi',
             'username.unique' => 'Username sudah digunakan',
             'email.required' => 'Email wajib diisi',
             'email.email' => 'Format email tidak valid',
             'email.unique' => 'Email sudah terdaftar',
-            'no_wa.required' => 'Nomor WhatsApp wajib diisi',
-            'no_wa.unique' => 'Nomor WhatsApp sudah terdaftar',
             'password.required' => 'Password wajib diisi',
             'password.min' => 'Password minimal 6 karakter',
             'password.confirmed' => 'Konfirmasi password tidak cocok',
@@ -42,10 +39,9 @@ class RegisterController extends Controller
 
         try {
             $user = User::create([
-                'name' => $data['name'],
+                'nama' => $data['nama'],
                 'username' => $data['username'],
                 'email' => $data['email'],
-                'no_wa' => $data['no_wa'],
                 'password' => Hash::make($data['password']),
                 'role' => 'user',
             ]);

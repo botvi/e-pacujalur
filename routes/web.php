@@ -9,11 +9,20 @@ use App\Http\Controllers\{
 
 use App\Http\Controllers\superadmin\{
     DashboardSuperAdminController,
+    JalurController,
+    GelanggangController,
+    EventController,
+    JuaraPacuJalurController,
+    UndianPacuController,
+    ProfilController,
+
 };
+
 use App\Http\Controllers\user\{
-    PreviewController,
-    LinkController,
-    EditorController,
+    WebHomeController,
+    WebDaftarJalurController,
+    WebJuaraPacuJalurController,
+    WebUndianPacuController,
 };
 use App\Http\Controllers\auth\{
     LoginController,
@@ -64,26 +73,28 @@ Route::post('/forgot-password/verify-otp', [ForgotPasswordController::class, 've
 Route::post('/forgot-password/reset', [ForgotPasswordController::class, 'resetPassword'])->name('forgot-password.reset-password');
 
 
+// Web Routes (Public)
+Route::get('/', [WebHomeController::class, 'index'])->name('web.home');
+Route::get('/daftar-jalur', [WebDaftarJalurController::class, 'index'])->name('web.daftarjalur');
+Route::get('/daftar-jalur/{id}', [WebDaftarJalurController::class, 'detail'])->name('web.daftarjalur.detail');
+Route::get('/juara-pacu-jalur', [WebJuaraPacuJalurController::class, 'index'])->name('web.juarapacujalur');
+Route::get('/juara-pacu-jalur/{id}', [WebJuaraPacuJalurController::class, 'detail'])->name('web.juarapacujalur.detail');
+Route::get('/undian-pacu', [WebUndianPacuController::class, 'index'])->name('web.undianpacu');
+Route::get('/undian-pacu/{id}', [WebUndianPacuController::class, 'detail'])->name('web.undianpacu.detail');
+
+// Admin Routes
 Route::group(['middleware' => ['role:superadmin']], function () {
     Route::get('/dashboard-superadmin', [DashboardSuperAdminController::class, 'index'])->name('dashboard-superadmin');
+    Route::resource('managejalur', JalurController::class);
+    Route::resource('managegelanggang', GelanggangController::class);
+    Route::resource('manageevent', EventController::class);
+    Route::resource('managejuarapacujalur', JuaraPacuJalurController::class);
+    Route::resource('manageundianpacu', UndianPacuController::class);
+    
+    // Profile Routes
+    Route::get('/profil', [ProfilController::class, 'index'])->name('profil.index');
+    Route::put('/profil', [ProfilController::class, 'update'])->name('profil.update');
+    Route::put('/profil/password', [ProfilController::class, 'updatePassword'])->name('profil.update-password');
 });
 
-Route::get('/preview', [PreviewController::class, 'index'])->name('preview');
 
-// Route untuk user
-Route::group(['middleware' => ['auth']], function () {
-    Route::get('/editor', [EditorController::class, 'index'])->name('editor');
-    Route::get('/get-layout', [LinkController::class, 'getLayout'])->name('get-layout');
-    Route::get('/test-profile', [LinkController::class, 'testProfile'])->name('test-profile');
-    Route::post('/store-link', [LinkController::class, 'store'])->name('store-link');
-    Route::post('/store-layout', [LinkController::class, 'storeLayout'])->name('store-layout');
-    Route::post('/update-profile', [LinkController::class, 'updateProfile'])->name('update-profile');
-    Route::post('/update-grid-produk', [LinkController::class, 'updateGridProduk'])->name('update-grid-produk');
-    Route::post('/update-tombol-link', [LinkController::class, 'updateTombolLink'])->name('update-tombol-link');
-    Route::post('/update-youtube-embed', [LinkController::class, 'updateYoutubeEmbed'])->name('update-youtube-embed');
-    Route::post('/update-sosial-media', [LinkController::class, 'updateSosialMedia'])->name('update-sosial-media');
-    Route::post('/update-portfolio-project', [LinkController::class, 'updatePortfolioProject'])->name('update-portfolio-project');
-    Route::post('/update-gambar-thumbnail', [LinkController::class, 'updateGambarThumbnail'])->name('update-gambar-thumbnail');
-    Route::post('/update-spotify-embed', [LinkController::class, 'updateSpotifyEmbed'])->name('update-spotify-embed');
-    Route::post('/update-background-custom', [LinkController::class, 'updateBackgroundCustom'])->name('update-background-custom');
-});

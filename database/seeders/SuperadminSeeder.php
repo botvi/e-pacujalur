@@ -20,7 +20,6 @@ class SuperadminSeeder extends Seeder
             'nama' => 'Superadmin',
             'role' => 'superadmin',
             'email' => 'superadmin@gmail.com',
-            'no_wa' => '085156985698',
             'password' => Hash::make('password'), // Pastikan mengganti 'password' dengan kata sandi yang aman
         ]);
     }
