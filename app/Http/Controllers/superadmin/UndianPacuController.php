@@ -5,24 +5,29 @@ namespace App\Http\Controllers\superadmin;
 use App\Models\Event;
 use App\Models\UndianPacu;
 use App\Models\Gelanggang;
+use App\Models\Jalur;
 use Illuminate\Http\Request;
 use RealRashid\SweetAlert\Facades\Alert;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Storage;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\UndianPacuExport;
 
 class UndianPacuController extends Controller
 {
     public function index()
     {
         $undianPacu = UndianPacu::with('event', 'gelanggang')->get();
-        return view('pagesuperadmin.manageundianpacu.index', compact('undianPacu'));
+        $jalur = Jalur::all()->keyBy('id');
+        return view('pagesuperadmin.manageundianpacu.index', compact('undianPacu', 'jalur'));
     }
 
     public function create()
     {
         $event = Event::all();
         $gelanggang = Gelanggang::all();
-        return view('pagesuperadmin.manageundianpacu.create', compact('event', 'gelanggang'));
+        $jalur = Jalur::all();
+        return view('pagesuperadmin.manageundianpacu.create', compact('event', 'gelanggang', 'jalur'));
     }
 
     public function store(Request $request)
@@ -30,56 +35,46 @@ class UndianPacuController extends Controller
         $request->validate([
             'event_id' => 'required|exists:events,id',
             'gelanggang_id' => 'required|exists:gelanggangs,id',
-            'gambar' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'jalur_peserta' => 'required|array|min:2',
+            'jalur_peserta.*' => 'integer|exists:jalurs,id',
+            'participants' => 'required|array',
             'tanggal' => 'required|date',
             'jam' => 'required|string|max:255',
         ]);
 
-        try {
-            $gambar = $request->file('gambar');
-            $gambarName = time() . '.' . $gambar->getClientOriginalExtension();
-            
-            // Pastikan folder tujuan ada
-            $destinationPath = public_path('image/undianpacu');
-            if (!file_exists($destinationPath)) {
-                mkdir($destinationPath, 0755, true);
-            }
-            
-            // Pindahkan file ke folder public/image/jalur
-            $gambar->move($destinationPath, $gambarName);
+        $participants = [
+            'peserta' => $request->jalur_peserta,
+            'pairing' => $request->participants,
+        ];
 
         UndianPacu::create([
             'event_id' => $request->event_id,
             'gelanggang_id' => $request->gelanggang_id,
-            'gambar' => $gambarName,
+            'participants' => $participants,
             'tanggal' => $request->tanggal,
             'jam' => $request->jam,
         ]);
 
-            Alert::toast('Data Undian Pacu berhasil ditambahkan', 'success')
-                ->position('top-end')
-                ->timerProgressBar();
-            return redirect()->route('manageundianpacu.index');
-        } catch (\Exception $e) {
-            Alert::toast('Terjadi kesalahan saat menyimpan data', 'error')
-                ->position('top-end')
-                ->timerProgressBar();
-            return redirect()->back()->withInput();
-        }
+        Alert::toast('Data Undian Pacu berhasil ditambahkan', 'success')
+            ->position('top-end')
+            ->timerProgressBar();
+        return redirect()->route('manageundianpacu.index');
     }
 
     public function show($id)
     {
         $undianPacu = UndianPacu::with('event', 'gelanggang')->findOrFail($id);
-        return view('pagesuperadmin.manageundianpacu.show', compact('undianPacu'));
+        $jalur = Jalur::all()->keyBy('id');
+        return view('pagesuperadmin.manageundianpacu.show', compact('undianPacu', 'jalur'));
     }
 
     public function edit($id)
     {
         $event = Event::all();
         $gelanggang = Gelanggang::all();
+        $jalur = Jalur::all();
         $undianPacu = UndianPacu::with('event', 'gelanggang')->findOrFail($id);
-        return view('pagesuperadmin.manageundianpacu.edit', compact('undianPacu', 'event', 'gelanggang'));
+        return view('pagesuperadmin.manageundianpacu.edit', compact('undianPacu', 'event', 'gelanggang', 'jalur'));
     }
 
     public function update(Request $request, $id)
@@ -87,83 +82,51 @@ class UndianPacuController extends Controller
         $request->validate([
             'event_id' => 'required|exists:events,id',
             'gelanggang_id' => 'required|exists:gelanggangs,id',
-            'gambar' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'jalur_peserta' => 'required|array|min:2',
+            'jalur_peserta.*' => 'integer|exists:jalurs,id',
+            'participants' => 'required|array',
             'tanggal' => 'required|date',
             'jam' => 'required|string|max:255',
         ]);
 
-        try {
-            $undianPacu = UndianPacu::findOrFail($id);
+        $participants = [
+            'peserta' => $request->jalur_peserta,
+            'pairing' => $request->participants,
+        ];
 
-            // Cek apakah user mengupload gambar baru
-            if ($request->hasFile('gambar')) {
-                // Hapus gambar lama jika ada
-                if ($undianPacu->gambar && file_exists(public_path('image/undianpacu/' . $undianPacu->gambar))) {
-                    unlink(public_path('image/undianpacu/' . $undianPacu->gambar));
-                }
+        $undianPacu = UndianPacu::findOrFail($id);
 
-                $gambar = $request->file('gambar');
-                $gambarName = time() . '.' . $gambar->getClientOriginalExtension();
-                
-                // Pastikan folder tujuan ada
-                $destinationPath = public_path('image/undianpacu');
-                if (!file_exists($destinationPath)) {
-                    mkdir($destinationPath, 0755, true);
-                }
-                
-                // Pindahkan file baru ke folder public/image/jalur
-                $gambar->move($destinationPath, $gambarName);
+        $undianPacu->update([
+            'event_id' => $request->event_id,
+            'gelanggang_id' => $request->gelanggang_id,
+            'participants' => $participants,
+            'tanggal' => $request->tanggal,
+            'jam' => $request->jam,
+        ]);
 
-                    $undianPacu->update([
-                    'event_id' => $request->event_id,
-                    'gelanggang_id' => $request->gelanggang_id,
-                    'tanggal' => $request->tanggal,
-                    'jam' => $request->jam,
-                    'gambar' => $gambarName,
-                ]);
-            } else {
-                // Jika tidak ada gambar baru, update semua field kecuali gambar
-                $undianPacu->update([
-                    'event_id' => $request->event_id,
-                    'gelanggang_id' => $request->gelanggang_id,
-                    'tanggal' => $request->tanggal,
-                    'jam' => $request->jam,
-                ]);
-            }
-
-            Alert::toast('Data Undian Pacu berhasil diperbarui', 'success')
-                ->position('top-end')
-                ->timerProgressBar();
-            return redirect()->route('manageundianpacu.index');
-        } catch (\Exception $e) {
-            Alert::toast('Terjadi kesalahan saat memperbarui data', 'error')
-                ->position('top-end')
-                ->timerProgressBar();
-            return redirect()->back()->withInput();
-        }
+        Alert::toast('Data Undian Pacu berhasil diperbarui', 'success')
+            ->position('top-end')
+            ->timerProgressBar();
+        return redirect()->route('manageundianpacu.index');
     }
 
     public function destroy($id)
     {
-        try {
-            $undianPacu = UndianPacu::findOrFail($id);
+        $undianPacu = UndianPacu::findOrFail($id);
+        $undianPacu->delete();
+        Alert::toast('Data Undian Pacu berhasil dihapus', 'success')
+            ->position('top-end')
+            ->timerProgressBar();
+        return redirect()->route('manageundianpacu.index');
+    }
 
-            // Hapus file gambar dari folder public
-            if ($undianPacu->gambar && file_exists(public_path('image/undianpacu/' . $undianPacu->gambar))) {
-                unlink(public_path('image/undianpacu/' . $undianPacu->gambar));
-            }
+    public function export($id)
+    {
+        $undianPacu = UndianPacu::with('event', 'gelanggang')->findOrFail($id);
+        $jalur = Jalur::all()->keyBy('id');
 
-            $undianPacu->delete();
+        $fileName = 'undian_pacu_' . $undianPacu->id . '_' . now()->format('Ymd_His') . '.xlsx';
 
-            Alert::toast('Data Undian Pacu berhasil dihapus', 'success')
-                ->position('top-end')
-                ->timerProgressBar();
-                return redirect()->route('manageundianpacu.index');
-        } catch (\Exception $e) {
-            Alert::toast('Terjadi kesalahan saat menghapus data', 'error')
-                ->position('top-end')
-                ->timerProgressBar();
-            return redirect()->back();
-        }
+        return Excel::download(new UndianPacuExport($undianPacu, $jalur), $fileName);
     }
 }

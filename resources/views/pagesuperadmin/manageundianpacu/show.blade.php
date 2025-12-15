@@ -103,6 +103,54 @@
                 </div>
               </div>
             </div>
+
+            {{-- Hasil Undian Jalur --}}
+            @php
+                $participants = is_array($undianPacu->participants) ? $undianPacu->participants : (json_decode($undianPacu->participants, true) ?? []);
+                $pairing = $participants['pairing'] ?? [];
+                $hasPairing = is_array($pairing) && count($pairing) > 0;
+            @endphp
+            <div class="card-body border-top">
+              <h5 class="mb-3">Hasil Undian Jalur</h5>
+              <div class="table-responsive border rounded">
+                <table class="table table-sm table-striped table-bordered mb-0 align-middle">
+                  <thead class="table-light">
+                    <tr>
+                      <th style="width: 60px;">#</th>
+                      <th>Jalur Kiri</th>
+                      <th>Jalur Kanan / Bay</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @if($hasPairing)
+                      @foreach($pairing as $idx => $p)
+                        <tr>
+                          <td>{{ $loop->iteration }}</td>
+                          @if(isset($p['kiri']) && isset($p['kanan']))
+                            @php
+                              $kiriJ = $jalur[$p['kiri']] ?? null;
+                              $kananJ = $jalur[$p['kanan']] ?? null;
+                            @endphp
+                            <td>{{ $kiriJ->nama_jalur ?? ('ID '.$p['kiri']) }} (kiri)</td>
+                            <td>{{ $kananJ->nama_jalur ?? ('ID '.$p['kanan']) }} (kanan)</td>
+                          @elseif(isset($p['bay']))
+                            @php
+                              $bayJ = $jalur[$p['bay']] ?? null;
+                            @endphp
+                            <td>-</td>
+                            <td>{{ $bayJ->nama_jalur ?? ('ID '.$p['bay']) }} (bay)</td>
+                          @endif
+                        </tr>
+                      @endforeach
+                    @else
+                      <tr>
+                        <td colspan="3" class="text-center text-muted">Belum ada hasil undian jalur.</td>
+                      </tr>
+                    @endif
+                  </tbody>
+                </table>
+              </div>
+            </div>
             
             <!-- Action Buttons -->
             <div class="card-footer">

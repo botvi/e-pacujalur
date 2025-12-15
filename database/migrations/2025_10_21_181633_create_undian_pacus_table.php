@@ -15,9 +15,9 @@ return new class extends Migration
             $table->id();
             $table->foreignId('event_id')->constrained('events')->cascadeOnDelete()->cascadeOnUpdate();
             $table->foreignId('gelanggang_id')->constrained('gelanggangs')->cascadeOnDelete()->cascadeOnUpdate();
-            $table->string('gambar')->nullable();
             $table->date('tanggal')->nullable();
             $table->string('jam')->nullable();
+            $table->json('participants')->nullable();
             $table->timestamps();
         });
     }

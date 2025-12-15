@@ -11,9 +11,12 @@ class UndianPacu extends Model
     protected $fillable = [
         'event_id',
         'gelanggang_id',
-        'gambar',
+        'participants',
         'tanggal',
         'jam',
+    ];
+    protected $casts = [
+        'participants' => 'array',
     ];
 
     public function event()
@@ -25,4 +28,9 @@ class UndianPacu extends Model
     {
         return $this->belongsTo(Gelanggang::class);
     }
+    public function Jalur()
+    {
+        return $this->belongsTo(Jalur::class);
+    }
+  
 }

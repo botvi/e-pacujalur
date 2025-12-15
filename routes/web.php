@@ -90,6 +90,7 @@ Route::group(['middleware' => ['role:superadmin']], function () {
     Route::resource('manageevent', EventController::class);
     Route::resource('managejuarapacujalur', JuaraPacuJalurController::class);
     Route::resource('manageundianpacu', UndianPacuController::class);
+    Route::get('manageundianpacu/{id}/export', [UndianPacuController::class, 'export'])->name('manageundianpacu.export');
     
     // Profile Routes
     Route::get('/profil', [ProfilController::class, 'index'])->name('profil.index');

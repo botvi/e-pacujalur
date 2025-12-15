@@ -14,8 +14,8 @@
                             <li class="breadcrumb-item active" aria-current="page">{{ $undianPacu->event->nama_event }}</li>
                         </ol>
                     </nav>
-                    <h1>{{ $undianPacu->event->nama_event }}</h1>
-                    <p>Detail informasi undian pacu</p>
+                    <h1>Detail Undian Pacu</h1>
+                    <p>Informasi lengkap dan hasil undian jalur</p>
                 </div>
             </div>
         </div>
@@ -28,203 +28,130 @@
         <div class="row">
             <div class="col-lg-8">
                 <div class="undian-detail-content">
-                    <div class="undian-image">
-                        <img src="{{ asset('image/undianpacu/' . $undianPacu->gambar) }}" 
-                             class="img-fluid clickable-image" 
-                             alt="{{ $undianPacu->event->nama_event }}"
-                             data-bs-toggle="modal" 
-                             data-bs-target="#imageModal"
-                             data-image-src="{{ asset('image/undianpacu/' . $undianPacu->gambar) }}"
-                             data-image-title="{{ $undianPacu->event->nama_event }}"
-                             onerror="this.src='{{ asset('image/undianpacu/default.jpg') }}'">
+                    <div class="undian-image mb-3">
+                        @if(!empty($undianPacu->gambar))
+                            <img src="{{ asset('image/undianpacu/' . $undianPacu->gambar) }}" 
+                                 class="img-fluid rounded clickable-image" 
+                                 alt="{{ $undianPacu->event->nama_event }}"
+                                 onerror="this.src='{{ asset('image/undianpacu/default.jpg') }}'">
+                        @endif
                     </div>
-                    
-                    <div class="undian-info">
-                        <h2>{{ $undianPacu->event->nama_event }}</h2>
-                        
-                        <div class="undian-meta-table">
-                            <table class="table meta-table table-bordered">
+
+                    <div class="table-responsive mb-4">
+                        <table class="table table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th colspan="2" class="text-center">Informasi Undian Pacu</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td width="30%"><strong>Event</strong></td>
+                                    <td>{{ $undianPacu->event->nama_event }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Gelanggang</strong></td>
+                                    <td>{{ $undianPacu->gelanggang->nama_gelanggang }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Tanggal</strong></td>
+                                    <td>{{ \Carbon\Carbon::parse($undianPacu->tanggal)->format('d M Y') }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Jam</strong></td>
+                                    <td>{{ $undianPacu->jam }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Dibuat Pada</strong></td>
+                                    <td>{{ $undianPacu->created_at->format('d M Y, H:i') }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Terakhir Diupdate</strong></td>
+                                    <td>{{ $undianPacu->updated_at->format('d M Y, H:i') }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    @php
+                        $participants = is_array($undianPacu->participants) ? $undianPacu->participants : (json_decode($undianPacu->participants, true) ?? []);
+                        $pairing = $participants['pairing'] ?? [];
+                        $hasPairing = is_array($pairing) && count($pairing) > 0;
+                    @endphp
+
+                    <div class="hasil-undian-section">
+                        <h3 class="section-title">Hasil Undian Jalur</h3>
+                        <div class="table-responsive border rounded">
+                            <table class="table table-sm table-striped table-bordered mb-0 align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 60px;">#</th>
+                                        <th>Jalur Kiri</th>
+                                        <th>Jalur Kanan / Bay</th>
+                                    </tr>
+                                </thead>
                                 <tbody>
-                                    <tr>
-                                        <td class="meta-label">
-                                            <i class="bi bi-geo-alt"></i>
-                                            Gelanggang
-                                        </td>
-                                        <td class="meta-value">{{ $undianPacu->gelanggang->nama_gelanggang }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="meta-label">
-                                            <i class="bi bi-calendar-date"></i>
-                                            Tanggal
-                                        </td>
-                                        <td class="meta-value">{{ \Carbon\Carbon::parse($undianPacu->tanggal)->format('d M Y') }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="meta-label">
-                                            <i class="bi bi-clock"></i>
-                                            Jam
-                                        </td>
-                                        <td class="meta-value">{{ $undianPacu->jam }}</td>
-                                    </tr>
+                                    @if($hasPairing)
+                                        @foreach($pairing as $idx => $p)
+                                            <tr>
+                                                <td>{{ $loop->iteration }}</td>
+                                                @if(isset($p['kiri']) && isset($p['kanan']))
+                                                    @php
+                                                        $kiriJ = $jalur[$p['kiri']] ?? null;
+                                                        $kananJ = $jalur[$p['kanan']] ?? null;
+                                                    @endphp
+                                                    <td>{{ $kiriJ->nama_jalur ?? ('ID '.$p['kiri']) }} (kiri)</td>
+                                                    <td>{{ $kananJ->nama_jalur ?? ('ID '.$p['kanan']) }} (kanan)</td>
+                                                @elseif(isset($p['bay']))
+                                                    @php
+                                                        $bayJ = $jalur[$p['bay']] ?? null;
+                                                    @endphp
+                                                    <td>-</td>
+                                                    <td>{{ $bayJ->nama_jalur ?? ('ID '.$p['bay']) }} (bay)</td>
+                                                @endif
+                                            </tr>
+                                        @endforeach
+                                    @else
+                                        <tr>
+                                            <td colspan="3" class="text-center text-muted">Belum ada hasil undian jalur.</td>
+                                        </tr>
+                                    @endif
                                 </tbody>
                             </table>
                         </div>
-                        
-                        <div class="undian-description">
-                            <h3>Informasi Event</h3>
-                            <p>{{ $undianPacu->event->deskripsi }}</p>
-                        </div>
-                        
-                        <div class="undian-schedule">
-                            <h3>Jadwal Undian</h3>
-                            <div class="schedule-card">
-                                <table class="table schedule-detail-table table-bordered">
-                                    <tbody>
-                                        <tr>
-                                            <td class="schedule-icon-cell">
-                                                <div class="schedule-icon">
-                                                    <i class="bi bi-calendar-event"></i>
-                                                </div>
-                                            </td>
-                                            <td class="schedule-content-cell">
-                                                <h4>Tanggal Pelaksanaan</h4>
-                                                <p>{{ \Carbon\Carbon::parse($undianPacu->tanggal)->format('l, d F Y') }}</p>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td class="schedule-icon-cell">
-                                                <div class="schedule-icon">
-                                                    <i class="bi bi-clock-history"></i>
-                                                </div>
-                                            </td>
-                                            <td class="schedule-content-cell">
-                                                <h4>Waktu Mulai</h4>
-                                                <p>{{ $undianPacu->jam }} WIB</p>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td class="schedule-icon-cell">
-                                                <div class="schedule-icon">
-                                                    <i class="bi bi-geo-alt-fill"></i>
-                                                </div>
-                                            </td>
-                                            <td class="schedule-content-cell">
-                                                <h4>Lokasi</h4>
-                                                <p>{{ $undianPacu->gelanggang->nama_gelanggang }}</p>
-                                                @if($undianPacu->gelanggang->lokasi_gelanggang)
-                                                    <small class="text-muted">{{ $undianPacu->gelanggang->lokasi_gelanggang }}</small>
-                                                @endif
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
-            
+
             <div class="col-lg-4">
                 <div class="undian-sidebar">
                     <div class="sidebar-widget">
-                        <h4>Undian Terbaru</h4>
+                        <h4>Undian Lainnya</h4>
                         <div class="undian-list">
-                            @forelse($undianPacuTerbaru as $undianTerbaru)
-                            <div class="undian-item-small">
-                                <div class="undian-img-small">
-                                    <img src="{{ asset('image/undianpacu/' . $undianTerbaru->gambar) }}" 
-                                         alt="{{ $undianTerbaru->event->nama_event }}"
-                                         onerror="this.src='{{ asset('image/undianpacu/default.jpg') }}'">
+                            @forelse($undianPacuTerbaru as $u)
+                                <div class="undian-item-small">
+                                    <div class="undian-img-small">
+                                        <img src="{{ asset('image/undianpacu/' . $u->gambar) }}" 
+                                             alt="{{ $u->event->nama_event }}"
+                                             onerror="this.src='{{ asset('image/undianpacu/default.jpg') }}'">
+                                    </div>
+                                    <div class="undian-info-small">
+                                        <h5><a href="{{ route('web.undianpacu.detail', $u->id) }}">{{ $u->event->nama_event }}</a></h5>
+                                        <p>{{ $u->gelanggang->nama_gelanggang }}</p>
+                                        <small class="text-muted">{{ \Carbon\Carbon::parse($u->tanggal)->format('d M Y') }} - {{ $u->jam }}</small>
+                                    </div>
                                 </div>
-                                <div class="undian-info-small">
-                                    <h5><a href="{{ route('web.undianpacu.detail', $undianTerbaru->id) }}">{{ $undianTerbaru->event->nama_event }}</a></h5>
-                                    <p>{{ $undianTerbaru->gelanggang->nama_gelanggang }}</p>
-                                    <small class="text-muted">{{ \Carbon\Carbon::parse($undianTerbaru->tanggal)->format('d M Y') }} - {{ $undianTerbaru->jam }}</small>
-                                </div>
-                            </div>
                             @empty
-                            <p>Tidak ada undian terbaru</p>
+                                <p class="text-muted">Tidak ada undian lainnya</p>
                             @endforelse
                         </div>
                     </div>
-                    
-                    <div class="sidebar-widget">
-                        <h4>Informasi</h4>
-                        <div class="info-box">
-                            <div class="info-item">
-                                <i class="bi bi-shield-check"></i>
-                                <span>Informasi Terverifikasi</span>
-                            </div>
-                            <div class="info-item">
-                                <i class="bi bi-clock"></i>
-                                <span>Update Terakhir: {{ $undianPacu->updated_at->format('d M Y') }}</span>
-                            </div>
-                            <div class="info-item">
-                                <i class="bi bi-calendar-check"></i>
-                                <span>Status: Aktif</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="sidebar-widget">
-                        <h4>Gelanggang</h4>
-                        <div class="gelanggang-info">
-                            <h5>{{ $undianPacu->gelanggang->nama_gelanggang }}</h5>
-                            @if($undianPacu->gelanggang->deskripsi)
-                                <p>{{ Str::limit($undianPacu->gelanggang->deskripsi, 100) }}</p>
-                            @endif
-                            @if($undianPacu->gelanggang->lokasi_gelanggang)
-                                <div class="location-info">
-                                    <i class="bi bi-geo-alt"></i>
-                                    <span>{{ $undianPacu->gelanggang->lokasi_gelanggang }}</span>
-                                </div>
-                            @endif
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
     </div>
 </section>
 
-<!-- CTA Section -->
-<section id="cta" class="cta">
-    <div class="container" data-aos="zoom-in">
-        <div class="row">
-            <div class="col-lg-9 text-center text-lg-start">
-                <h3>Jelajahi Undian Lainnya</h3>
-                <p>Temukan jadwal undian pacu lainnya yang mungkin menarik untuk Anda.</p>
-            </div>
-            <div class="col-lg-3 cta-btn-container text-center">
-                <a class="cta-btn align-middle" href="{{ route('web.undianpacu') }}">Lihat Semua Undian</a>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Image Preview Modal -->
-<div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="imageModalLabel">Preview Gambar</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body text-center p-0">
-                <div class="image-container" style="max-height: 70vh; overflow: hidden;">
-                    <img id="modalImage" 
-                         src="{{ asset('image/undianpacu/1761168998.jpg') }}" 
-                         class="img-fluid" 
-                         alt="Preview"
-                         style="width: 100%; height: auto; object-fit: contain;">
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
-            </div>
-        </div>
-    </div>
-</div>
 @endsection
 
 @section('styles')
@@ -273,138 +200,21 @@
     border-radius: 15px;
     box-shadow: 0 5px 20px rgba(0,0,0,0.1);
     overflow: hidden;
-}
-
-.undian-image {
-    height: 400px;
-    overflow: hidden;
+    padding: 30px;
 }
 
 .undian-image img {
     width: 100%;
-    height: 100%;
+    max-height: 350px;
     object-fit: cover;
-}
-
-.undian-info {
-    padding: 30px;
-}
-
-.undian-info h2 {
-    font-size: 2rem;
-    font-weight: 700;
-    margin-bottom: 20px;
-    color: #333;
-}
-
-.undian-meta-table {
-    margin-bottom: 30px;
-    background: #f8f9fa;
     border-radius: 10px;
-    padding: 20px;
 }
 
-.meta-table {
-    margin: 0;
-}
-
-.meta-table td {
-    padding: 10px 15px;
-    border: 1px solid #dee2e6;
-    vertical-align: middle;
-}
-
-.meta-label {
-    font-weight: 600;
-    color: #666;
-    font-size: 1rem;
-    width: 30%;
-}
-
-.meta-label i {
-    margin-right: 8px;
-    color: #667eea;
-    font-size: 1.1rem;
-}
-
-.meta-value {
-    font-weight: 600;
-    color: #333;
-    font-size: 1rem;
-}
-
-.undian-description h3,
-.undian-schedule h3 {
-    font-size: 1.5rem;
+.section-title {
+    font-size: 1.4rem;
     font-weight: 600;
     margin-bottom: 15px;
     color: #333;
-}
-
-.undian-description p {
-    color: #666;
-    line-height: 1.8;
-    font-size: 1.1rem;
-}
-
-.schedule-card {
-    background: #f8f9fa;
-    border-radius: 10px;
-    padding: 20px;
-}
-
-.schedule-detail-table {
-    margin: 0;
-}
-
-.schedule-detail-table tr {
-    border-bottom: 1px solid #dee2e6;
-}
-
-.schedule-detail-table tr:last-child {
-    border-bottom: none;
-}
-
-.schedule-icon-cell {
-    width: 80px;
-    padding: 20px 15px;
-    vertical-align: top;
-    border: 1px solid #dee2e6;
-}
-
-.schedule-content-cell {
-    padding: 20px 15px;
-    vertical-align: top;
-    border: 1px solid #dee2e6;
-}
-
-.schedule-icon {
-    width: 50px;
-    height: 50px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-
-.schedule-icon i {
-    color: white;
-    font-size: 1.2rem;
-}
-
-.schedule-content-cell h4 {
-    font-size: 1rem;
-    font-weight: 600;
-    margin-bottom: 5px;
-    color: #333;
-}
-
-.schedule-content-cell p {
-    color: #666;
-    margin: 0;
-    font-size: 0.9rem;
 }
 
 .undian-sidebar {
@@ -431,14 +241,6 @@
 .undian-item-small {
     display: flex;
     margin-bottom: 15px;
-    padding-bottom: 15px;
-    border-bottom: 1px solid #eee;
-}
-
-.undian-item-small:last-child {
-    border-bottom: none;
-    margin-bottom: 0;
-    padding-bottom: 0;
 }
 
 .undian-img-small {
@@ -447,7 +249,6 @@
     border-radius: 8px;
     overflow: hidden;
     margin-right: 15px;
-    flex-shrink: 0;
 }
 
 .undian-img-small img {
@@ -461,62 +262,14 @@
     font-size: 0.9rem;
 }
 
-.undian-info-small h5 a {
-    color: #333;
-    text-decoration: none;
-    transition: color 0.3s ease;
-}
-
-.undian-info-small h5 a:hover {
-    color: #667eea;
-}
-
 .undian-info-small p {
-    color: #666;
-    font-size: 0.8rem;
     margin: 0 0 5px 0;
-}
-
-.info-box {
-    margin-top: 15px;
-}
-
-.info-item {
-    display: flex;
-    align-items: center;
-    margin-bottom: 10px;
-    font-size: 0.9rem;
-    color: #666;
-}
-
-.info-item i {
-    margin-right: 8px;
-    color: #667eea;
-}
-
-.gelanggang-info h5 {
-    font-size: 1.1rem;
-    font-weight: 600;
-    margin-bottom: 10px;
-    color: #333;
-}
-
-.gelanggang-info p {
-    color: #666;
-    font-size: 0.9rem;
-    margin-bottom: 10px;
-}
-
-.location-info {
-    display: flex;
-    align-items: center;
-    color: #666;
     font-size: 0.8rem;
+    color: #666;
 }
 
-.location-info i {
-    margin-right: 5px;
-    color: #667eea;
+.undian-info-small small {
+    font-size: 0.75rem;
 }
 
 .cta {
@@ -559,90 +312,6 @@
         padding-left: 0;
         margin-top: 30px;
     }
-    
-    .page-header-content h1 {
-        font-size: 2rem;
-    }
-    
-    .undian-info h2 {
-        font-size: 1.5rem;
-    }
-    
-    .undian-image {
-        height: 250px;
-    }
-}
-
-.clickable-image {
-    cursor: pointer;
-    transition: transform 0.3s ease, opacity 0.3s ease;
-}
-
-.clickable-image:hover {
-    transform: scale(1.05);
-    opacity: 0.8;
-}
-
-/* Modal Image Styles */
-.image-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #f8f9fa;
-    border-radius: 8px;
-    min-height: 200px;
-}
-
-#modalImage {
-    max-width: 100%;
-    max-height: 70vh;
-    object-fit: contain;
-    border-radius: 8px;
-}
-
-.modal-body {
-    padding: 0 !important;
-}
-
-.modal-content {
-    border-radius: 15px;
-    overflow: hidden;
 }
 </style>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const imageModal = document.getElementById('imageModal');
-    const modalImage = document.getElementById('modalImage');
-    const modalTitle = document.getElementById('imageModalLabel');
-    
-    // Event listener untuk modal
-    imageModal.addEventListener('show.bs.modal', function (event) {
-        const button = event.relatedTarget;
-        const imageSrc = button.getAttribute('data-image-src');
-        const imageTitle = button.getAttribute('data-image-title');
-        
-        console.log('Image Source:', imageSrc);
-        console.log('Image Title:', imageTitle);
-        
-        if (imageSrc) {
-            modalImage.src = imageSrc;
-            modalImage.alt = imageTitle || 'Preview Gambar';
-        }
-        
-        if (imageTitle) {
-            modalTitle.textContent = imageTitle;
-        } else {
-            modalTitle.textContent = 'Preview Gambar';
-        }
-    });
-    
-    // Event listener untuk error loading gambar
-    modalImage.addEventListener('error', function() {
-        console.log('Error loading image, using fallback');
-        this.src = '{{ asset("image/undianpacu/1761168998.jpg") }}';
-        this.alt = 'Gambar tidak tersedia';
-    });
-});
-</script>
 @endsection

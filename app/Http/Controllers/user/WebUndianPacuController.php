@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\UndianPacu;
 use App\Models\Event;
 use App\Models\Gelanggang;
+use App\Models\Jalur;
 use Illuminate\Http\Request;
 
 class WebUndianPacuController extends Controller
@@ -27,8 +28,9 @@ class WebUndianPacuController extends Controller
         $undianPacu = $query->latest()->paginate(12);
         $events = Event::all();
         $gelanggangs = Gelanggang::all();
+        $jalur = Jalur::all()->keyBy('id');
         
-        return view('pageuser.undianpacu.index', compact('undianPacu', 'events', 'gelanggangs'));
+        return view('pageuser.undianpacu.index', compact('undianPacu', 'events', 'gelanggangs', 'jalur'));
     }
 
     public function detail($id)
@@ -39,7 +41,8 @@ class WebUndianPacuController extends Controller
             ->latest()
             ->take(4)
             ->get();
+        $jalur = Jalur::all()->keyBy('id');
         
-        return view('pageuser.undianpacu.detail', compact('undianPacu', 'undianPacuTerbaru'));
+        return view('pageuser.undianpacu.detail', compact('undianPacu', 'undianPacuTerbaru', 'jalur'));
     }
 }

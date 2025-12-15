@@ -35,15 +35,15 @@
             </div>
             <div class="card-body">
               <div class="dt-responsive table-responsive">
-                <table id="simpletable" class="table table-striped table-bordered nowrap">
+                <table id="simpletable" class="table table-striped table-bordered nowrap align-middle">
                   <thead>
                     <tr>
                       <th>No</th>
-                      <th>Gambar</th>
                       <th>Event</th>
                       <th>Gelanggang</th>
                       <th>Tanggal</th>
                       <th>Jam</th>
+                      <th>Hasil Undian Jalur</th>
                       <th>Dibuat Pada</th>
                       <th>Terakhir Diupdate</th>
                       <th>Aksi</th>
@@ -51,19 +51,26 @@
                   </thead>
                   <tbody>
                     @foreach($undianPacu as $j => $item)
+                    @php
+                      $participants = is_array($item->participants) ? $item->participants : (json_decode($item->participants, true) ?? []);
+                      $pairing = $participants['pairing'] ?? [];
+                      $hasPairing = is_array($pairing) && count($pairing) > 0;
+                    @endphp
                     <tr>
                       <td>{{ $j+1 }}</td>
-                      <td>
-                        @if($item->gambar)
-                          <img src="{{ asset('image/undianpacu/' . $item->gambar) }}" alt="Gambar Undian Pacu" style="width: 50px; height: 50px; object-fit: cover;" class="rounded">
-                        @else
-                          <span class="text-muted">Tidak ada gambar</span>
-                        @endif
-                      </td>
                       <td>{{ $item->event->nama_event }}</td>
                       <td>{{ $item->gelanggang->nama_gelanggang }}</td>
                       <td>{{ \Carbon\Carbon::parse($item->tanggal)->format('d M Y') }}</td>
                       <td>{{ $item->jam }}</td>
+                      <td class="text-center">
+                        @if($hasPairing)
+                          <a href="{{ route('manageundianpacu.export', $item->id) }}" class="btn btn-sm btn-success">
+                            <i class="ti ti-download me-1"></i> Download Excel
+                          </a>
+                        @else
+                          <span class="badge bg-secondary">Belum diundi</span>
+                        @endif
+                      </td>
                       <td>{{ $item->created_at->format('d M Y, H:i') }}</td>
                       <td>{{ $item->updated_at->format('d M Y, H:i') }}</td>
                       <td>
@@ -81,11 +88,11 @@
                   <tfoot>
                     <tr>
                       <th>No</th>
-                      <th>Gambar</th>
                       <th>Event</th>
                       <th>Gelanggang</th>
                       <th>Tanggal</th>
                       <th>Jam</th>
+                      <th>Hasil Undian Jalur</th>
                       <th>Dibuat Pada</th>
                       <th>Terakhir Diupdate</th>
                       <th>Aksi</th>
