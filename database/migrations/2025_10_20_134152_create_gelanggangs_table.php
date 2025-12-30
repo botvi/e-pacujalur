@@ -17,7 +17,7 @@ return new class extends Migration
             $table->longText('deskripsi');
             $table->string('gambar');
             $table->string('lokasi_gelanggang');
-            $table->string('maps');
+            $table->string('latitudelongitude');
             $table->timestamps();
         });
     }

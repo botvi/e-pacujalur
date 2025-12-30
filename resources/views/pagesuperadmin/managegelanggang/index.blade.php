@@ -43,7 +43,6 @@
                       <th>Nama Gelanggang</th>
                       <th>Deskripsi</th>
                       <th>Lokasi</th>
-                      <th>Maps</th>
                       <th>Aksi</th>
                     </tr>
                   </thead>
@@ -61,15 +60,7 @@
                       <td>{{ $item->nama_gelanggang }}</td>
                       <td>{{ Str::limit($item->deskripsi, 50) }}</td>
                       <td>{{ $item->lokasi_gelanggang }}</td>
-                      <td>
-                        @if($item->maps)
-                          <a href="{{ $item->maps }}" target="_blank" class="btn btn-sm btn-outline-primary">
-                            <i class="ti ti-map-pin me-1"></i> Lihat Maps
-                          </a>
-                        @else
-                          <span class="text-muted">Tidak ada maps</span>
-                        @endif
-                      </td>
+                   
                       <td>
                         <a href="{{ route('managegelanggang.show', $item->id) }}" class="btn btn-sm btn-info me-1">Lihat</a>
                         <a href="{{ route('managegelanggang.edit', $item->id) }}" class="btn btn-sm btn-warning me-1">Edit</a>
@@ -89,7 +80,6 @@
                       <th>Nama Gelanggang</th>
                       <th>Deskripsi</th>
                       <th>Lokasi</th>
-                      <th>Maps</th>
                       <th>Aksi</th>
                     </tr>
                   </tfoot>

@@ -13,6 +13,6 @@ class Gelanggang extends Model
         'deskripsi',
         'gambar',
         'lokasi_gelanggang',
-        'maps',
+        'latitudelongitude',
     ];
 }

@@ -63,11 +63,11 @@
                 <div class="row">
                   <div class="col-md-6">
                     <div class="form-group mb-3">
-                      <label class="form-label">Link Maps <span class="text-danger">*</span></label>
-                      <input type="url" name="maps" class="form-control @error('maps') is-invalid @enderror" 
-                             placeholder="https://maps.google.com/..." value="{{ old('maps', $gelanggang->maps) }}" required>
-                      <small class="form-text text-muted">Masukkan link Google Maps atau maps lainnya</small>
-                      @error('maps')
+                      <label class="form-label">Latitude Longitude Maps <span class="text-danger">*</span></label>
+                      <input type="text" name="latitudelongitude" class="form-control @error('latitudelongitude') is-invalid @enderror" 
+                             placeholder="Latitude, Longitude" value="{{ old('latitudelongitude', $gelanggang->latitudelongitude) }}" required>
+                      <small class="form-text text-muted">Masukkan latitude longitude maps</small>
+                      @error('latitudelongitude')
                         <div class="invalid-feedback">{{ $message }}</div>
                       @enderror
                     </div>
@@ -154,9 +154,9 @@
     });
 
     // Validasi URL Maps
-    document.querySelector('input[name="maps"]').addEventListener('blur', function(e) {
+    document.querySelector('input[name="latitudelongitude"]').addEventListener('blur', function(e) {
         const url = e.target.value;
-        if (url && !isValidUrl(url)) {
+        if (url && !isValidLatitudeLongitude(url)) {
             e.target.classList.add('is-invalid');
             let feedback = e.target.parentNode.querySelector('.invalid-feedback');
             if (!feedback) {
@@ -164,19 +164,19 @@
                 feedback.className = 'invalid-feedback';
                 e.target.parentNode.appendChild(feedback);
             }
-            feedback.textContent = 'Format URL tidak valid';
+            feedback.textContent = 'Format Latitude Longitude tidak valid';
         } else {
             e.target.classList.remove('is-invalid');
         }
     });
 
-    function isValidUrl(string) {
+    function isValidLatitudeLongitude(string) {
         try {
-            new URL(string);
-            return true;
+            const [lat, lng] = string.split(',');
+            return !isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
         } catch (_) {
             return false;
         }
-    }
+    }   
 </script>
 @endsection

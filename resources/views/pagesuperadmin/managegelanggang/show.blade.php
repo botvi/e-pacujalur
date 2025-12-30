@@ -1,5 +1,27 @@
 @extends('template-admin.layout')
 
+@section('style')
+<style>
+    .custom-marker {
+        background: transparent !important;
+        border: none !important;
+    }
+
+    .leaflet-popup-content-wrapper {
+        border-radius: 8px;
+        box-shadow: 0 3px 14px rgba(0,0,0,0.2);
+    }
+
+    .leaflet-popup-tip {
+        background-color: white;
+    }
+
+    .leaflet-container {
+        border-radius: 8px;
+    }
+</style>
+@endsection
+
 @section('content')
 <section class="pc-container">
     <div class="pc-content">
@@ -83,16 +105,40 @@
                   </div>
                   
                   <div class="mb-3">
-                    <label class="form-label fw-bold text-muted">Link Maps</label>
-                    @if($gelanggang->maps)
-                      <div class="d-flex align-items-center">
-                        <a href="{{ $gelanggang->maps }}" target="_blank" class="btn btn-outline-primary me-2">
-                          <i class="ti ti-map-pin me-1"></i> Buka Maps
-                        </a>
-                        <small class="text-muted">{{ Str::limit($gelanggang->maps, 50) }}</small>
+                    <label class="form-label fw-bold text-muted">Lokasi Maps</label>
+                    @if($gelanggang->latitudelongitude)
+                      <div class="card border-primary">
+                        <div class="card-body p-3">
+                          <!-- Leaflet Map Container -->
+                          <div id="map" style="height: 300px; width: 100%; border-radius: 8px; margin-bottom: 15px;"></div>
+
+                          <div class="d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center">
+                              <i class="ti ti-map-pin text-primary me-2"></i>
+                              <small class="text-muted">Lokasi gelanggang ditampilkan pada peta di atas</small>
+                            </div>
+                            @if($gelanggang->maps)
+                              <a href="{{ $gelanggang->maps }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                                <i class="ti ti-external-link me-1"></i> Buka di Google Maps
+                              </a>
+                            @endif
+                          </div>
+                        </div>
                       </div>
                     @else
-                      <p class="text-muted mb-0">Tidak ada link maps</p>
+                      <div class="card border-secondary">
+                        <div class="card-body p-3 text-center">
+                          <i class="ti ti-map-pin-off text-secondary mb-2" style="font-size: 2rem;"></i>
+                          <p class="text-muted mb-0">Belum ada data koordinat lokasi untuk gelanggang ini</p>
+                          @if($gelanggang->maps)
+                            <div class="mt-2">
+                              <a href="{{ $gelanggang->maps }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                                <i class="ti ti-external-link me-1"></i> Buka Link Maps
+                              </a>
+                            </div>
+                          @endif
+                        </div>
+                      </div>
                     @endif
                   </div>
                   
@@ -135,13 +181,95 @@
 @endsection
 
 @section('script')
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
+
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        // Initialize Leaflet Map
+        @if($gelanggang->latitudelongitude)
+            // Parse koordinat dari field latitudelongitude
+            let lat = -2.5489; // Default: Center Indonesia
+            let lng = 118.0149;
+            let zoom = 5;
+
+            try {
+                const koordinatData = '{{ $gelanggang->latitudelongitude }}';
+
+                // Coba parse berbagai format koordinat
+                if (koordinatData.includes(',')) {
+                    // Format: "latitude,longitude"
+                    const [latStr, lngStr] = koordinatData.split(',');
+                    lat = parseFloat(latStr.trim());
+                    lng = parseFloat(lngStr.trim());
+                    zoom = 15;
+                } else if (koordinatData.includes('{') && koordinatData.includes('}')) {
+                    // Format JSON: {"lat": -6.2088, "lng": 106.8456}
+                    const koordinatJson = JSON.parse(koordinatData);
+                    lat = parseFloat(koordinatJson.lat || koordinatJson.latitude);
+                    lng = parseFloat(koordinatJson.lng || koordinatJson.longitude);
+                    zoom = 15;
+                }
+
+                // Validasi koordinat
+                if (isNaN(lat) || isNaN(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+                    console.warn('Koordinat tidak valid, menggunakan default Indonesia');
+                    lat = -2.5489;
+                    lng = 118.0149;
+                    zoom = 5;
+                }
+            } catch (error) {
+                console.error('Error parsing koordinat:', error);
+                lat = -2.5489;
+                lng = 118.0149;
+                zoom = 5;
+            }
+
+            // Initialize map
+            const map = L.map('map').setView([lat, lng], zoom);
+
+            // Add OpenStreetMap tiles
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                maxZoom: 19,
+            }).addTo(map);
+
+            // Add marker with popup
+            const marker = L.marker([lat, lng]).addTo(map);
+            marker.bindPopup(`
+                <div style="text-align: center;">
+                    <h6 style="margin: 0 0 8px 0; color: #333;">{{ $gelanggang->nama_gelanggang }}</h6>
+                    <p style="margin: 0; font-size: 12px; color: #666;">
+                        <i class="ti ti-map-pin"></i> {{ $gelanggang->lokasi_gelanggang }}
+                    </p>
+                    <small style="color: #999; margin-top: 4px; display: block;">
+                        Koordinat: ${lat.toFixed(6)}, ${lng.toFixed(6)}
+                    </small>
+                </div>
+            `).openPopup();
+
+            // Add custom icon style
+            marker.setIcon(L.divIcon({
+                className: 'custom-marker',
+                html: '<div style="background-color: #007bff; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>',
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
+            }));
+        @endif
+
+        // SweetAlert for delete confirmation
         document.querySelectorAll('.delete-form').forEach(form => {
             form.addEventListener('submit', function (e) {
                 e.preventDefault();
-                
+
                 Swal.fire({
                     title: 'Apakah Anda yakin?',
                     text: "Data gelanggang '{{ $gelanggang->nama_gelanggang }}' akan dihapus secara permanen!",

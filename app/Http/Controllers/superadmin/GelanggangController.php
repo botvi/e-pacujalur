@@ -28,7 +28,7 @@ class GelanggangController extends Controller
             'deskripsi' => 'required|string',
             'gambar' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'lokasi_gelanggang' => 'required|string|max:255',
-            'maps' => 'required|string|max:255',
+            'latitudelongitude' => 'required|string|max:255',
         ]);
 
         try {
@@ -49,7 +49,7 @@ class GelanggangController extends Controller
                 'deskripsi' => $request->deskripsi,
                 'gambar' => $gambarName,
                 'lokasi_gelanggang' => $request->lokasi_gelanggang,
-                'maps' => $request->maps,
+                'latitudelongitude' => $request->latitudelongitude,
             ]);
 
             Alert::toast('Data Gelanggang berhasil ditambahkan', 'success')
@@ -83,7 +83,7 @@ class GelanggangController extends Controller
             'deskripsi' => 'required|string',
             'gambar' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'lokasi_gelanggang' => 'required|string|max:255',
-            'maps' => 'required|string|max:255',
+            'latitudelongitude' => 'required|string|max:255',
         ]);
 
         try {
@@ -113,7 +113,7 @@ class GelanggangController extends Controller
                     'deskripsi' => $request->deskripsi,
                     'gambar' => $gambarName,
                     'lokasi_gelanggang' => $request->lokasi_gelanggang,
-                    'maps' => $request->maps,
+                    'latitudelongitude' => $request->latitudelongitude,
                 ]);
             } else {
                 // Jika tidak ada gambar baru, update semua field kecuali gambar
@@ -121,7 +121,7 @@ class GelanggangController extends Controller
                     'nama_gelanggang' => $request->nama_gelanggang,
                     'deskripsi' => $request->deskripsi,
                     'lokasi_gelanggang' => $request->lokasi_gelanggang,
-                    'maps' => $request->maps,
+                    'latitudelongitude' => $request->latitudelongitude,
                 ]);
             }
 

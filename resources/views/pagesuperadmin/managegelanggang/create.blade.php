@@ -62,25 +62,14 @@
                 <div class="row">
                   <div class="col-md-6">
                     <div class="form-group mb-3">
-                      <label class="form-label">Link Maps <span class="text-danger">*</span></label>
-                      <input type="url" name="maps" class="form-control @error('maps') is-invalid @enderror" 
-                             placeholder="https://maps.google.com/..." value="{{ old('maps') }}" required>
-                      <small class="form-text text-muted">Masukkan link Google Maps atau maps lainnya</small>
-                      @error('maps')
+                      <label class="form-label">Latitude Longitude Maps <span class="text-danger">*</span></label>
+                      <input type="text" name="latitudelongitude" class="form-control @error('latitudelongitude') is-invalid @enderror" 
+                             placeholder="Latitude, Longitude" value="{{ old('latitudelongitude') }}" required>
+                      <small class="form-text text-muted">Masukkan latitude longitude maps</small>
+                      @error('latitudelongitude')
                         <div class="invalid-feedback">{{ $message }}</div>
                       @enderror
-                    </div>
-                  </div>
-                  <div class="col-md-6">
-                    <div class="form-group mb-3">
-                      <label class="form-label">Gambar Gelanggang <span class="text-danger">*</span></label>
-                      <input type="file" name="gambar" class="form-control @error('gambar') is-invalid @enderror" 
-                             accept="image/*" required>
-                      <small class="form-text text-muted">Format: JPEG, PNG, JPG, GIF, SVG. Maksimal 2MB</small>
-                      @error('gambar')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                      @enderror
-                    </div>
+                    </div> 
                   </div>
                 </div>
 
